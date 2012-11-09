@@ -1,0 +1,15 @@
+BEGINNING-OF-PROGRAM
+ BEGINNING-OF-EXECUTION
+  BEGIN
+    move
+    turnleft
+    move
+    turnleft
+    move
+    move
+    turnleft
+  END
+  turnoff
+ END-OF-EXECUTION
+
+END-OF-PROGRAM
