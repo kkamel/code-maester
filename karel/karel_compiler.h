@@ -1,7 +1,7 @@
-#ifndef KAREL_KAREL_COMPILER
-#define KAREL_KAREL_COMPILER
+#ifndef KAREL_KAREL_COMPILER_H
+#define KAREL_KAREL_COMPILER_H
 
-#include <cstdlib>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -11,7 +11,7 @@ class KarelCompiler {
   private:
     // Karel's world to be provided as input. It is implemented
     // using a 2D grid of booleans.
-    bool *world;      
+    //bool *world;      
     // Karel first starts off pointing East. East is 
     // thus taken as Direction 0. Directions are enumerated 
     // in an anti-clockwise fashion. The directions are as 
@@ -29,29 +29,34 @@ class KarelCompiler {
     };
 
     // Holds current location of Karel in Karel's world. 
-    point location; 
+    point location;
+    std::string program_code;
+    std::vector <std::string> instructions;
+    
+    void SyntaxAnalyzer ();
+    // Tokenizes input code.
+    void Tokenizer (std::string s, std::vector<std::string> &tokens);
+    // Executes Karels commands.
+    void CodeGenerator (std::map<std::string, std::string> &user_procedures);
+     // Implements Karel's Move() command. 
+    void Move ();
+    // Implements Karel's TurnLeft() command. 
+    void TurnLeft ();
+    // Implements Karel;s TurnOff() command.
+    void TurnOff ();
+    // Returns x axis of Karel's location.
+    int GetCurrentX () {return location.x;}
+    // Returns y axis of Karel's location.
+    int GetCurrentY () {return location.y;}
+    // Prints final postion of Karel.
   
   public:
     // Initialize Karel.
-    KarelCompiler();
-    // Lexical Analyzer.
-    void LexicalAnalyzer(std::string &commands, std::vector<std::string> *tokens);
-    // Syntax Analyzer.
-    void SyntaxAnalyzer(const std::vector<std::string> &instructions, std::vector<std::string> *errors);
-    void CodeGenerator(const std::vector<std::string> &instructions);
-    // Implements Karel's Move() command. 
-    void Move();
-    // Implements Karel's TurnLeft() command. 
-    void TurnLeft();
-    // Implements Karel;s TurnOff() command.
-    void TurnOff();
-    // Returns x axis of Karel's location.
-    int GetCurrentX() {return location.x;}
-    // Returns y axis of Karel's location.
-    int GetCurrentY() {return location.y;}
-    // Prints final postion of Karel.
-    void PrintState()const;
-
+    KarelCompiler ();
+    // Run KarelCompiler.
+    void Run(const std::string &input_code);
+    // Prints the state of Karel in the world.
+    void PrintState () const; 
 };
 } // namespace Karel.
-#endif // KAREL_KAREL_COMPILER
+#endif // KAREL_KAREL_COMPILER_H

@@ -1,6 +1,13 @@
+/*
+ * Karel Compiler Implementation file
+ * Author: Kareem Kamel kamel.kareem@gmail.com
+ */
+
 #include "karel_compiler.h"
+#include "lexical_analyzer.h"
 
 #include <iostream>
+#include <map>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -16,61 +23,105 @@ KarelCompiler :: KarelCompiler() {
   location.y = 1;
   direction = 0;
 
-  // TODO Step2: Read in world from file.
 } // KarelCompiler.
 
-void KarelCompiler :: LexicalAnalyzer(string &commands, vector<string> *tokens) {
-  // Split into tokens.
-  const string delimiters = "\n, ";
-  string::size_type lastPos = commands.find_first_not_of(delimiters, 0);
+void KarelCompiler :: Run(const string &input_code) {
+
+  program_code = input_code;
+  //printf("%s", program_code.c_str());
+  SyntaxAnalyzer();
+} // Run.
+
+void KarelCompiler :: Tokenizer(string s, vector<string>& tokens) {
+  // Split into instructions.
+  //printf("%s\n", program_code.c_str());
+  const string delimiters = "\n ;";
+  string::size_type lastPos = s.find_first_not_of(delimiters, 0);
   // Find first "non-delimiter".
-  string::size_type pos = commands.find_first_of(delimiters, lastPos);
+  string::size_type pos = s.find_first_of(delimiters, lastPos);
   while (string::npos != pos || string::npos != lastPos) {
     // Found a token, add it to the vector.
-    if (commands.substr(lastPos, pos - lastPos) != " ")
-      (*tokens).push_back(commands.substr(lastPos, pos - lastPos));
-    // Skip delimiters. Note the "not_of"
-    lastPos = commands.find_first_not_of(delimiters, pos);
+    if (s.substr(lastPos, pos - lastPos) != " ") {
+      tokens.push_back(s.substr(lastPos, pos - lastPos));
+      //printf("%s\n", (s.substr(lastPos, pos - lastPos)).c_str());
+    } 
+      // Skip delimiters. Note the "not_of"
+    lastPos = s.find_first_not_of(delimiters, pos);
     // Find next"non-delimiter"
-    pos = commands.find_first_of(delimiters, lastPos);
+    pos = s.find_first_of(delimiters, lastPos);
   }
-}
+} // LexAnalyzer.
 
-void KarelCompiler :: SyntaxAnalyzer(const vector<string> &instructions, vector<string> *syntax_errors) {
- 
-  //TODO: Strip instructions before evaluating their syntax.
-  for (int i = 0; i < instructions.size(); i++)  {
-    //cout << instructions[i] << endl;
-      if (instructions[i] != "BEGIN" &&
-          instructions[i] != "move" &&
-          instructions[i] != "turnleft" &&
-          instructions[i] != "turnoff" &&
-          instructions[i] != "BEGINNING-OF-PROGRAM" &&
-          instructions[i] != "BEGINNING-OF-EXECUTION" &&
-          instructions[i] != "END-OF-PROGRAM" &&
-          instructions[i] != "END-OF-EXECUTION" &&
-          instructions[i] != "END" ) {
-        (*syntax_errors).push_back(instructions[i]);
-      }
+void KarelCompiler :: SyntaxAnalyzer() {
+  
+  map <string, string> user_procedures;
+  string code_to_preprocess = program_code;
+  LexicalAnalyzer lex_analyzer;
+  lex_analyzer.Run(code_to_preprocess, user_procedures);
+
+  if (lex_analyzer.Get_NumOfSyntaxErrors() > 0) {
+    lex_analyzer.Display_SyntaxErrors();
+    return;
   }
+ 
+  Tokenizer(program_code, instructions);
+  CodeGenerator(user_procedures);
+  
 } // SyntaxAnalyzer.
 
-void KarelCompiler :: CodeGenerator(const vector<string> &instructions) {
-  for (int i = 0; i < instructions.size(); i++) {
+void KarelCompiler :: CodeGenerator(map<string, string> &procedures) {
+  
+  int n = instructions.size();
+  string current_instruction;
+  vector<string>::iterator it;
+  
+  for (it = instructions.begin() ; it != instructions.end(); it++)
+    if(*it == "BEGINNING-OF-EXECUTION")
+      break;
+
+  for (it; it != instructions.end(); it++) {
         // TODO: Add the remaining instructions to the switch-case 
         // statement.
-      if (instructions[i] == "move") {
-        cout << "move" << endl;
+
+    current_instruction = *it;
+    
+    if (procedures.find(current_instruction) != procedures.end()) {
+      
+      string procedure_code = procedures.find(current_instruction)->second;
+      //printf("%s\n", procedure_code.c_str());
+     
+      vector <string> procedure_tokens;
+      Tokenizer(procedure_code, procedure_tokens);
+      
+      for (int i = 0; i < procedure_tokens.size(); i++) {
+        if (procedure_tokens[i] == "move") {
+          //printf("%s\n", "move");
+          Move();
+        }
+        else if(procedure_tokens[i] == "turnleft") {
+          TurnLeft();
+          //printf("%s\n", "turnleft");
+        }
+        else if (procedure_tokens[i] == "turnoff") {
+          TurnOff();
+          //printf("%s\n", "turnoff");
+        }
+      }
+    } 
+    else {
+      if (current_instruction == "move") {
+        // printf("%s\n", "move");
         Move();
       }
-      else if(instructions[i] == "turnleft") {
+      else if(current_instruction == "turnleft") {
         TurnLeft();
-        cout << "turnleft" << endl;
+          // printf("%s\n", "turnleft");  
       }
-      else if (instructions[i] == "turnoff") {
+      else if (current_instruction == "turnoff") {
         TurnOff();
-        cout << "turnoff" << endl;
+        // printf("%s\n", "turnoff");
       }
+    }
   }
 } // CodeGenerator.
 
@@ -91,12 +142,18 @@ void KarelCompiler :: Move() {
     // Karel pointing West.
     case 2:
       // TODO: Check for obstacles ahead.
-      --location.x;
+      if(location.x > 0)
+        --location.x;
+      else 
+        printf("End of world. Cannot move further west.\n");
       break;
     // Karel pointing South.
     case 3:
       // TODO: Check for obstacles ahead.
-      --location.y;
+      if (location.y > 0)
+        --location.y;
+      else 
+        printf("End of world. Cannot move further south.\n");
       break;
   }
 } // Move.
@@ -104,14 +161,10 @@ void KarelCompiler :: Move() {
 void KarelCompiler :: TurnLeft() {
   // If direction = South (3pi/2 rad) the 
   // next pi/2 is the same as 0.
-  if (direction < 4) {
     // Turn left => 90 degrees.
     ++direction;
-  }
-  else {
-    // Turn back to East.
-    direction = 0;
-  }
+    direction = direction % 4;
+
 } // TurnLeft.
 
 void KarelCompiler :: TurnOff() {
@@ -119,7 +172,9 @@ void KarelCompiler :: TurnOff() {
 } // TurnOff.
 
 void KarelCompiler :: PrintState() const {
-   printf("%i,%i\n", location.x, location.y);
+   printf("\nPosition of robot: < %i,%i >", location.x, location.y);
+   printf(" facing ");
+
    switch (direction) {
      case 0:
        printf("%s\n", "East");
