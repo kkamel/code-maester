@@ -8,8 +8,9 @@
 
 #include <iostream>
 #include <map>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -95,67 +96,81 @@ void KarelCompiler :: CodeGenerator(map<string, string> &procedures) {
       
       for (int i = 0; i < procedure_tokens.size(); i++) {
         if (procedure_tokens[i] == "move") {
-          //printf("%s\n", "move");
+          printf("%s\n", "move");
           Move();
         }
         else if(procedure_tokens[i] == "turnleft") {
           TurnLeft();
-          //printf("%s\n", "turnleft");
+          printf("%s\n", "turnleft");
         }
         else if (procedure_tokens[i] == "turnoff") {
           TurnOff();
-          //printf("%s\n", "turnoff");
-        }
-      }
-    } 
+          printf("%s\n", "turnoff");
+        } // end else if.
+        PrintWorld();
+      } // end for.
+    } // if case preocedures.
     else {
       if (current_instruction == "move") {
-        // printf("%s\n", "move");
+        printf("%s\n", "move");
         Move();
       }
       else if(current_instruction == "turnleft") {
         TurnLeft();
-          // printf("%s\n", "turnleft");  
+        printf("%s\n", "turnleft");  
       }
       else if (current_instruction == "turnoff") {
         TurnOff();
-        // printf("%s\n", "turnoff");
-      }
-    }
+        printf("%s\n", "turnoff");
+      } // else if.
+      PrintWorld();
+    } // else.
+
   }
 } // CodeGenerator.
 
 // Implements Move() command in Karel
 void KarelCompiler :: Move() {
   // Check direction of travel.
+  bool border = 0;
   switch (direction) {
     // Karel pointing East.
     case 0:
       // TODO: Check for obstacles ahead. 
-      ++location.x;
+      if (location.x < world_dim)
+        ++location.x;
+      else
+        border = true;
       break;
     // Karel pointing North.
     case 1:
       // TODO: Check for obstacles ahead. 
-      ++location.y;
+      if (location.y < world_dim)
+        ++location.y;
+      else
+        border = true;
       break;
     // Karel pointing West.
     case 2:
       // TODO: Check for obstacles ahead.
-      if(location.x > 0)
+      if(location.x > 1)
         --location.x;
       else 
-        printf("End of world. Cannot move further west.\n");
+        border = true;
+      printf("column%i, row %i\n", location.x, location.y);
       break;
     // Karel pointing South.
     case 3:
       // TODO: Check for obstacles ahead.
-      if (location.y > 0)
+      if (location.y > 1)
         --location.y;
-      else 
-        printf("End of world. Cannot move further south.\n");
+      else
+        border = true;
+      printf("column %i, row %i\n", location.x, location.y);
       break;
   }
+  if(border)
+    printf ("Ouch, you just walked into a wall!\n");
 } // Move.
 
 void KarelCompiler :: TurnLeft() {
@@ -191,4 +206,38 @@ void KarelCompiler :: PrintState() const {
    }
 } // PrintPosition.
 
+void KarelCompiler :: PrintWorld() const {
+
+  int karel_location = location.y * world_dim - location.x; 
+  printf("%i\n", karel_location);     
+  for (int i = world_dim; i > 0; i--) {
+    //printf("%i\n", i);
+    for (int j = 1; j <= world_dim; j++) {
+      int square_num;
+      square_num = i * world_dim - j; 
+      
+      if (square_num == karel_location) {
+         switch (direction) {
+           case 0:
+             printf("%c", '>');  
+             break;
+           case 1:
+             printf("%c", '^');  
+             
+             break;
+           case 2:
+             printf("%c", '<');
+             break;
+           case 3:
+             printf("%c", 'v');
+             break;
+         }
+      }
+      else
+        printf("%c", '.');
+    }
+    printf("\n");
+  }
+  printf("\n");
+} // PrintWorld.
 } // namespace Karel. 

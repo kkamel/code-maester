@@ -53,7 +53,6 @@ void ReadInputFile(char* filename, string &code) {
 void Interpreter(const string &in_code) {
   
   karel::KarelCompiler compiler;
-  compiler.PrintState();
   compiler.Run(in_code);
   compiler.PrintState();
   

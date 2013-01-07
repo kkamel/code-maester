@@ -27,7 +27,8 @@ class KarelCompiler {
       int x;
       int y;
     };
-
+    // Dimentions of the square 2D world that Karel can move inside.
+    static const int world_dim = 8;
     // Holds current location of Karel in Karel's world. 
     point location;
     std::string program_code;
@@ -56,7 +57,9 @@ class KarelCompiler {
     // Run KarelCompiler.
     void Run(const std::string &input_code);
     // Prints the state of Karel in the world.
-    void PrintState () const; 
+    void PrintState () const;
+    // Prints visualization of Karel in the world.
+    void PrintWorld () const;
 };
 } // namespace Karel.
 #endif // KAREL_KAREL_COMPILER_H
